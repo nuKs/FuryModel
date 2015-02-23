@@ -1,0 +1,31 @@
+{
+  "name": "FuryModel",
+  "version": "0.0.0",
+  "homepage": "https://github.com/nuKs/FuryModel",
+  "authors": [
+    "Thibault PIRONT <gse.nuks@gmail.com>"
+  ],
+  "description": "Generic javascript factory layer",
+  "main": "dist/FuryModel.js",
+  "moduleType": [
+    "globals",
+    "node"
+  ],
+  "keywords": [
+    "generic",
+    "model",
+    "factory"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "when": "~3.7.2"
+  }
+}
