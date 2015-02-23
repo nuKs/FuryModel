@@ -19,6 +19,8 @@
       '_delete',
       '_process',
       '_unprocess',
+      '$exists',
+      '$load',
       '$reset',
       '$save',
       '$delete',
@@ -74,6 +76,10 @@
     return object;
   };
 
+  FuryModel.prototype.$exists = function() {
+    return this._pk !== null;
+  };
+
   FuryModel.prototype.$load = function() {
     var self = this;
     if (this._remoteData !== null) {
@@ -108,7 +114,7 @@
 
   FuryModel.prototype.$save = function(data) {
     var self = this;
-    if (!this._pk) {
+    if (!this.$exists()) {
       return this
         ._create(data || this.$raw())
         .then(function(pk, raw) {
