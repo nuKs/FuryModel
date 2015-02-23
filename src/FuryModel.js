@@ -10,6 +10,7 @@
     };
     this._filteredProperties = [
       '_pk',
+      '_remoteData',
       '_eventQueue',
       '_filteredProperties',
       '_init',
@@ -152,7 +153,7 @@
       enableUnprocess = true;
     }
 
-    if (enableUnprocess) {
+    if (enableUnprocess) {
       rawObject = this._unprocess(this);
     }
     else {
@@ -173,7 +174,7 @@
       }
     }, this);
 
-    return raw;
+    return rawObject;
   };
   FuryModel.prototype.$once = function(eventName, fn) {
     if (!this._eventQueue[eventName]) {
