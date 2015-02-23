@@ -6,7 +6,7 @@
     "Thibault PIRONT <gse.nuks@gmail.com>"
   ],
   "description": "Generic javascript factory layer",
-  "main": "dist/FuryModel.js",
+  "main": ["dist/when.js", "dist/FuryModel.js"],
   "moduleType": [
     "globals",
     "node"
@@ -24,8 +24,5 @@
     "bower_components",
     "test",
     "tests"
-  ],
-  "dependencies": {
-    "when": "~3.7.2"
-  }
+  ]
 }

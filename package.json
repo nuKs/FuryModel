@@ -4,7 +4,8 @@
   "description": "Generic javascript factory layer",
   "main": "dist/FuryModel.js",
   "scripts": {
-    "test": "./node_modules/karma/bin/karma start karma.conf.js --single-run"
+    "test": "./node_modules/karma/bin/karma start karma.conf.js --single-run",
+    "postinstall": "cd node_modules/when && npm run browserify && cp build/when.js ../../dist/when.js"
   },
   "repository": {
     "type": "git",
@@ -22,6 +23,7 @@
   },
   "homepage": "https://github.com/nuKs/FuryModel",
   "devDependencies": {
+    "browserify": "^9.0.3",
     "gulp": "^3.8.10",
     "gulp-concat": "^2.4.3",
     "gulp-sourcemaps": "^1.3.0",
@@ -30,5 +32,8 @@
     "karma": "^0.12.31",
     "karma-chrome-launcher": "^0.1.7",
     "karma-jasmine": "^0.3.5"
+  },
+  "dependencies": {
+    "when": "git://github.com/cujojs/when"
   }
 }
