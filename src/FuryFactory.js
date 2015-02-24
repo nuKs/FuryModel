@@ -49,7 +49,7 @@
     Object
     .keys(opts)
     .filter(function(prop) {
-      return prop !== 'constructor';
+      return prop !== '_constructor';
     })
     .forEach(function(prop) {
       FuryFactoryExtended.prototype[prop] = opts[prop];

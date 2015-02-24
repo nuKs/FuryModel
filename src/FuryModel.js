@@ -240,7 +240,7 @@
         throw new Error('property ' + prop + ' should be a function');
       }
 
-      return prop !== 'constructor';
+      return prop !== '_constructor';
     })
     .forEach(function(prop) {
       FuryModelExtended.prototype[prop] = opts[prop];
