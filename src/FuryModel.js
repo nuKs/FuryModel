@@ -104,7 +104,7 @@
       return this._filteredProperties.indexOf(prop) === -1;
     }, this)
     .forEach(function(prop) {
-      if (typeof this._remoteObject[prop] === 'undefined') {
+      if (!this._remoteObject || typeof this._remoteObject[prop] === 'undefined') {
         delete this[prop];
       }
       else {
