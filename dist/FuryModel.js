@@ -104,7 +104,7 @@
       return this._filteredProperties.indexOf(prop) === -1;
     }, this)
     .forEach(function(prop) {
-      if (typeof this._remoteObject[prop] === 'undefined') {
+      if (!this._remoteObject || typeof this._remoteObject[prop] === 'undefined') {
         delete this[prop];
       }
       else {
@@ -118,7 +118,10 @@
     if (!this.$exists()) {
       return this
         ._create(data || this.$raw())
-        .then(function(pk, raw) {
+        .then(function(result) {
+          var pk = result[0],
+              raw = result[1];
+
           self._pk = pk;
           self._remoteData = raw;
 
@@ -240,7 +243,7 @@
         throw new Error('property ' + prop + ' should be a function');
       }
 
-      return prop !== 'constructor';
+      return prop !== '_constructor';
     })
     .forEach(function(prop) {
       FuryModelExtended.prototype[prop] = opts[prop];
@@ -308,7 +311,7 @@
     Object
     .keys(opts)
     .filter(function(prop) {
-      return prop !== 'constructor';
+      return prop !== '_constructor';
     })
     .forEach(function(prop) {
       FuryFactoryExtended.prototype[prop] = opts[prop];

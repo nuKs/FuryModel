@@ -118,7 +118,10 @@
     if (!this.$exists()) {
       return this
         ._create(data || this.$raw())
-        .then(function(pk, raw) {
+        .then(function(result) {
+          var pk = result[0],
+              raw = result[1];
+
           self._pk = pk;
           self._remoteData = raw;
 
