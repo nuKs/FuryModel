@@ -2,6 +2,9 @@
   'use strict';
 
   function FuryModel(pk) {
+    this._isLoaded = false;
+    this._isLoading = false;
+
     this._remoteData = null;
     this._eventQueue = {
       'loaded': [],
@@ -10,17 +13,21 @@
     };
     this._filteredProperties = [
       '_pk',
+      '_isLoaded',
+      '_isLoading',
       '_remoteData',
       '_eventQueue',
       '_filteredProperties',
-      '_init',
       '_load',
+      '_init',
       '_create',
       '_update',
       '_delete',
       '_process',
       '_unprocess',
       '$exists',
+      '$isLoaded',
+      '$isLoading',
       '$load',
       '$reset',
       '$save',
@@ -37,6 +44,7 @@
     }
 
     if (this._pk === null) {
+      this._isLoaded = true;
       this._init();
     }
     else {
@@ -77,6 +85,12 @@
     return object;
   };
 
+  FuryModel.prototype.$isLoaded = function() {
+    return this._isLoaded;
+  };
+  FuryModel.prototype.$isLoading = function() {
+    return this._isLoading;
+  };
   FuryModel.prototype.$exists = function() {
     return this._pk !== null;
   };
@@ -87,9 +101,13 @@
       return when.resolve(this);
     }
     else {
-      return this.
-      _load()
+      self._isLoading = true;
+
+      return this
+      ._load()
       .then(function(raw) {
+        self._isLoading = false;
+        self._isLoaded = true;
         self._remoteData = raw;
 
         _setProperties(self, self._process(raw));
