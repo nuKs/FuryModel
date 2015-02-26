@@ -176,32 +176,26 @@
       });
   };
   FuryModel.prototype.$raw = function(enableUnprocess) {
-    var rawObject;
+    // @note properties are not deep copied
+
+    var rawObject = {};
 
     if (typeof enableUnprocess === 'undefined') {
       enableUnprocess = true;
     }
 
-    if (enableUnprocess) {
-      rawObject = this._unprocess(this);
-    }
-    else {
-      rawObject = {};
-    }
-
     Object
     .keys(this)
     .filter(function(key) {
-      return this._filteredProperties.indexOf(key) === -1 && !rawObject.hasOwnProperty(key);
+      return this._filteredProperties.indexOf(key) === -1;
     }, this)
-    .forEach(function (key) {
-      if (this[key] instanceof Array) {
-        rawObject[key] = this[key].slice();
-      }
-      else {
-        rawObject[key] = this[key];
-      }
+    .forEach(function(key) {
+      rawObject[key] = this[key];
     }, this);
+
+    if (enableUnprocess) {
+      rawObject = this._unprocess(rawObject);
+    }
 
     return rawObject;
   };
