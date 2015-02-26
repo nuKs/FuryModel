@@ -170,6 +170,7 @@
     return this
       ._delete()
       .then(function() {
+        self._pk = null;
         self._remoteData = null;
         return _callEventsOnce(self._eventQueue, 'deleted');
       });
