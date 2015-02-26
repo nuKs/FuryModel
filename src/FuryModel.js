@@ -97,8 +97,15 @@
 
   FuryModel.prototype.$load = function() {
     var self = this;
-    if (this._remoteData !== null) {
+    if (this.$isLoaded()) {
       return when.resolve(this);
+    }
+    else if (this.$isLoading()) {
+      return when.promise(function(resolve) {
+        self.$once('loaded', function() {
+          resolve(self);
+        }); // @todo manage loading error
+      });
     }
     else {
       self._isLoading = true;
