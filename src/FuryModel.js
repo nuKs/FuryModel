@@ -234,6 +234,8 @@
   }
 
   FuryModel.define = function(opts) {
+    opts = opts || {};
+
     var definableProperties = [
       '_constructor',
       '_init',
