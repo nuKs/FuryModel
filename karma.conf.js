@@ -16,6 +16,8 @@ module.exports = function(config) {
     // list of files / patterns to load in the browser
     files: [
       'dist/when.js',
+      'bower_components/FuryCall/dist/FuryCall.js',
+      'bower_components/FuryCallStack/dist/FuryCallStack.js',
       'src/**/*.js',
       'test/**/*Spec.js'
     ],
