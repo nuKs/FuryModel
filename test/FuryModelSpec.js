@@ -192,6 +192,10 @@ describe("FuryModel", function() {
     xit("should reverse the user defined values to the remote values", function() {
 
     });
+
+    xit("should allow to define which field to reset", function() {
+
+    });
   });
 
   describe("#$save", function() {

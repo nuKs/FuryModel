@@ -141,9 +141,19 @@
   };
 
   FuryModel.prototype.$reset = function() {
+    var fieldToRemove = Array.prototype.slice.call(arguments);
+
     Object.keys(this)
     .filter(function(prop) {
-      return this._filteredProperties.indexOf(prop) === -1;
+      if (this._filteredProperties.indexOf(prop) !== -1) {
+        return false;
+      }
+      else if (fieldToRemove.length && fieldToRemove.indexOf(prop) === -1) {
+        return false;
+      }
+      else {
+        return true;
+      }
     }, this)
     .forEach(function(prop) {
       if (!this._remoteObject || typeof this._remoteObject[prop] === 'undefined') {
