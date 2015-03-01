@@ -117,7 +117,7 @@
         self._isLoaded = true;
         self._remoteData = raw;
 
-        _setProperties(self, self._process(raw));
+        _setProperties(self, self._process(raw), false);
         return _callEventsOnce(self._eventQueue, 'loaded', self);
       });
     }
@@ -150,7 +150,7 @@
           self._pk = pk;
           self._remoteData = raw;
 
-          _setProperties(self, self._process(raw));
+          _setProperties(self, self._process(raw), false);
 
           return _callEventsOnce(self._eventQueue, 'created', self)
           .then(_callEventsOnce.bind(undefined, self._eventQueue, 'loaded', self));
@@ -221,8 +221,20 @@
     return result;
   }
 
-  function _setProperties(object, properties) {
-    Object.keys(properties).forEach(function(prop) {
+  function _setProperties(object, properties, override) {
+    if (typeof override === 'undefined') {
+      override = false;
+    }
+
+    var toEdit = Object.keys(properties);
+
+    if (!override) {
+      toEdit = toEdit.filter(function(prop) {
+        return typeof object[prop] === 'undefined';
+      });
+    }
+
+    toEdit.forEach(function(prop) {
       object[prop] = properties[prop];
     });
   }

@@ -154,7 +154,7 @@ describe("FuryModel", function() {
     });
   });
 
-  describe("Constructor", function() {
+  describe("constructor", function() {
     it("should define the primarykey", function() {
       var instance1 = createFakeInstance(413, {
         _load: function() { return when.resolve({}); }
