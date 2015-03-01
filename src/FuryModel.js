@@ -1,4 +1,4 @@
-(function() {
+(function(FuryCallStack) {
   'use strict';
 
   function FuryModel(pk) {
@@ -11,7 +11,23 @@
       'created': [],
       'deleted': []
     };
+
+    this._updateFnStack = new FuryCallStack({
+      object: this
+    });
+    this._updateFnStack.push({
+      fn: this._update
+    });
+    this._createFnStack = new FuryCallStack({
+      object: this
+    });
+    this._createFnStack.push({
+      fn: this._create
+    });
+
     this._filteredProperties = [
+      '_updateFnStack',
+      '_createFnStack',
       '_pk',
       '_isLoaded',
       '_isLoading',
@@ -33,7 +49,8 @@
       '$save',
       '$delete',
       '$raw',
-      '$once'
+      '$once',
+      '$pre'
     ];
 
     if (typeof pk === 'undefined') {
@@ -142,7 +159,9 @@
     var self = this;
     if (!this.$exists()) {
       return this
-        ._create(data || this.$raw())
+        ._createFnStack.exec({
+          args: [data || this.$raw()]
+        })
         .then(function(result) {
           var pk = result[0],
               raw = result[1];
@@ -158,7 +177,9 @@
     }
     else {
       return this
-        ._update(data || this.$raw())
+        ._updateFnStack.exec({
+          args: [data || this.$raw()]
+        })
         .then(function(result) {
           _setProperties(self, self._process(result), false);
 
@@ -208,6 +229,23 @@
     }
 
     this._eventQueue[eventName].push(fn);
+  };
+
+  FuryModel.prototype.$pre = function(aspectName, fn) {
+    switch (aspectName) {
+      case 'save':
+        this._updateFnStack.push({
+          fn: fn
+        });
+        this._createFnStack.push({
+          fn: fn
+        });
+        break;
+      default:
+        throw new Error(aspectName + ' is not a valid aspect');
+    }
+
+    return this;
   };
 
   function _callEventsOnce(eventQueue, eventName, param) {
@@ -296,4 +334,4 @@
     window.FuryModel = FuryModel;
   }
 
-})();
+})(window.FuryCallStack);

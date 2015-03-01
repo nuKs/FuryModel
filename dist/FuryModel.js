@@ -1,32 +1,56 @@
-(function() {
+(function(FuryCallStack) {
   'use strict';
 
   function FuryModel(pk) {
+    this._isLoaded = false;
+    this._isLoading = false;
+
     this._remoteData = null;
     this._eventQueue = {
       'loaded': [],
       'created': [],
       'deleted': []
     };
+
+    this._updateFnStack = new FuryCallStack({
+      object: this
+    });
+    this._updateFnStack.push({
+      fn: this._update
+    });
+    this._createFnStack = new FuryCallStack({
+      object: this
+    });
+    this._createFnStack.push({
+      fn: this._create
+    });
+
     this._filteredProperties = [
+      '_updateFnStack',
+      '_createFnStack',
       '_pk',
+      '_isLoaded',
+      '_isLoading',
       '_remoteData',
       '_eventQueue',
       '_filteredProperties',
-      '_init',
       '_load',
+      '_init',
       '_create',
       '_update',
       '_delete',
       '_process',
       '_unprocess',
       '$exists',
+      '$isLoaded',
+      '$isLoading',
       '$load',
       '$reset',
       '$save',
       '$delete',
       '$raw',
-      '$once'
+      '$once',
+      '$pre'
     ];
 
     if (typeof pk === 'undefined') {
@@ -37,6 +61,7 @@
     }
 
     if (this._pk === null) {
+      this._isLoaded = true;
       this._init();
     }
     else {
@@ -77,22 +102,39 @@
     return object;
   };
 
+  FuryModel.prototype.$isLoaded = function() {
+    return this._isLoaded;
+  };
+  FuryModel.prototype.$isLoading = function() {
+    return this._isLoading;
+  };
   FuryModel.prototype.$exists = function() {
     return this._pk !== null;
   };
 
   FuryModel.prototype.$load = function() {
     var self = this;
-    if (this._remoteData !== null) {
+    if (this.$isLoaded()) {
       return when.resolve(this);
     }
+    else if (this.$isLoading()) {
+      return when.promise(function(resolve) {
+        self.$once('loaded', function() {
+          resolve(self);
+        }); // @todo manage loading error
+      });
+    }
     else {
-      return this.
-      _load()
+      self._isLoading = true;
+
+      return this
+      ._load()
       .then(function(raw) {
+        self._isLoading = false;
+        self._isLoaded = true;
         self._remoteData = raw;
 
-        _setProperties(self, self._process(raw));
+        _setProperties(self, self._process(raw), false);
         return _callEventsOnce(self._eventQueue, 'loaded', self);
       });
     }
@@ -117,7 +159,9 @@
     var self = this;
     if (!this.$exists()) {
       return this
-        ._create(data || this.$raw())
+        ._createFnStack.exec({
+          args: [data || this.$raw()]
+        })
         .then(function(result) {
           var pk = result[0],
               raw = result[1];
@@ -125,7 +169,7 @@
           self._pk = pk;
           self._remoteData = raw;
 
-          _setProperties(self, self._process(raw));
+          _setProperties(self, self._process(raw), false);
 
           return _callEventsOnce(self._eventQueue, 'created', self)
           .then(_callEventsOnce.bind(undefined, self._eventQueue, 'loaded', self));
@@ -133,9 +177,14 @@
     }
     else {
       return this
-        ._update(data || this.$raw())
-        .then(function() {
-          self._remoteData = self.$raw(true); // @todo optimize
+        ._updateFnStack.exec({
+          args: [data || this.$raw()]
+        })
+        .then(function(result) {
+          _setProperties(self, self._process(result), false);
+
+          self._remoteData = self.$raw(true); // @proposal optimize
+
           return when.resolve(self);
         });
     }
@@ -145,37 +194,32 @@
     return this
       ._delete()
       .then(function() {
+        self._pk = null;
         self._remoteData = null;
         return _callEventsOnce(self._eventQueue, 'deleted');
       });
   };
   FuryModel.prototype.$raw = function(enableUnprocess) {
-    var rawObject;
+    // @note properties are not deep copied
+
+    var rawObject = {};
 
     if (typeof enableUnprocess === 'undefined') {
       enableUnprocess = true;
     }
 
-    if (enableUnprocess) {
-      rawObject = this._unprocess(this);
-    }
-    else {
-      rawObject = {};
-    }
-
     Object
     .keys(this)
     .filter(function(key) {
-      return this._filteredProperties.indexOf(key) === -1 && !rawObject.hasOwnProperty(key);
+      return this._filteredProperties.indexOf(key) === -1;
     }, this)
-    .forEach(function (key) {
-      if (this[key] instanceof Array) {
-        rawObject[key] = this[key].slice();
-      }
-      else {
-        rawObject[key] = this[key];
-      }
+    .forEach(function(key) {
+      rawObject[key] = this[key];
     }, this);
+
+    if (enableUnprocess) {
+      rawObject = this._unprocess(rawObject);
+    }
 
     return rawObject;
   };
@@ -185,6 +229,23 @@
     }
 
     this._eventQueue[eventName].push(fn);
+  };
+
+  FuryModel.prototype.$pre = function(aspectName, fn) {
+    switch (aspectName) {
+      case 'save':
+        this._updateFnStack.push({
+          fn: fn
+        });
+        this._createFnStack.push({
+          fn: fn
+        });
+        break;
+      default:
+        throw new Error(aspectName + ' is not a valid aspect');
+    }
+
+    return this;
   };
 
   function _callEventsOnce(eventQueue, eventName, param) {
@@ -201,13 +262,27 @@
     return result;
   }
 
-  function _setProperties(object, properties) {
-    Object.keys(properties).forEach(function(prop) {
+  function _setProperties(object, properties, override) {
+    if (typeof override === 'undefined') {
+      override = false;
+    }
+
+    var toEdit = Object.keys(properties);
+
+    if (!override) {
+      toEdit = toEdit.filter(function(prop) {
+        return typeof object[prop] === 'undefined';
+      });
+    }
+
+    toEdit.forEach(function(prop) {
       object[prop] = properties[prop];
     });
   }
 
   FuryModel.define = function(opts) {
+    opts = opts || {};
+
     var definableProperties = [
       '_constructor',
       '_init',
@@ -259,7 +334,7 @@
     window.FuryModel = FuryModel;
   }
 
-})();
+})(window.FuryCallStack);
 (function() {
   'use strict';
 
