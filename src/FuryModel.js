@@ -159,8 +159,11 @@
     else {
       return this
         ._update(data || this.$raw())
-        .then(function() {
-          self._remoteData = self.$raw(true); // @todo optimize
+        .then(function(result) {
+          _setProperties(self, self._process(result), false);
+
+          self._remoteData = self.$raw(true); // @proposal optimize
+
           return when.resolve(self);
         });
     }
